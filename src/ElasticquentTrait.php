@@ -74,6 +74,18 @@ trait ElasticquentTrait
         return $this->getTable();
     }
 
+    public function getIndexName()
+    {
+        $index_name = $this->getElasticConfig('default_index');
+
+        if (empty($index_name)) {
+            $index_name = 'default';
+        }
+        $index_name .= '_' . $this->getTypeName();
+        // Otherwise we will just go with 'default'
+        return $index_name;
+    }
+
     /**
      * Uses Timestamps In Index.
      */
@@ -370,7 +382,6 @@ trait ElasticquentTrait
     {
         $params = array(
             'index' => $this->getIndexName(),
-            'type' => $this->getTypeName(),
         );
 
         if ($getIdIfPossible && $this->getKey()) {
@@ -456,7 +467,7 @@ trait ElasticquentTrait
             'properties' => $instance->getMappingProperties(),
         );
 
-        $mapping['body'][$instance->getTypeName()] = $params;
+        $mapping['body'] = $params;
 
         return $instance->getElasticSearchClient()->indices()->putMapping($mapping);
     }
@@ -531,7 +542,7 @@ trait ElasticquentTrait
 
         $mappingProperties = $instance->getMappingProperties();
         if (!is_null($mappingProperties)) {
-            $index['body']['mappings'][$instance->getTypeName()] = [
+            $index['body']['mappings'] = [
                 '_source' => array('enabled' => true),
                 'properties' => $mappingProperties,
             ];
@@ -571,7 +582,7 @@ trait ElasticquentTrait
 
         $params = $instance->getBasicEsParams();
 
-        return $instance->getElasticSearchClient()->indices()->existsType($params);
+        return $instance->getElasticSearchClient()->indices()->exists($params);
     }
 
     /**
